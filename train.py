@@ -46,15 +46,19 @@ def train(opt, model, optimizer, scheduler, step):
         collate_fn=collator,
     )
 
+
+
     epoch = 1
 
     model.train()
+
     while step < opt.total_steps:
         train_dataset.generate_offset()
-
-        logger.info(f"Start epoch {epoch}")
+        logger.info(f"Start epoch {epoch}  {round(100* step/ opt.total_steps, 3)}%")
         for i, batch in enumerate(train_dataloader):
             step += 1
+            
+
 
             batch = {key: value.cuda() if isinstance(value, torch.Tensor) else value for key, value in batch.items()}
             train_loss, iter_stats = model(**batch, stats_prefix="train")
@@ -94,10 +98,14 @@ def train(opt, model, optimizer, scheduler, step):
                 model.train()
 
             if dist_utils.is_main() and step % opt.save_freq == 0:
-                utils.save(model, optimizer, scheduler, step, opt, opt.output_dir, f"step-{step}")
+                utils.save(model, optimizer, scheduler, step, opt, opt.output_dir, f"step-{step}  ")
 
             if step > opt.total_steps:
+                ## 세이브 하려고함
+                torch.save(model, f'{opt.output_dir}/model_test.pth') # 내가 넣음
+
                 break
+                
         epoch += 1
 
 
